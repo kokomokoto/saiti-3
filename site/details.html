@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ka">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ობიექტის დეტალები</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <h1 id="title">ობიექტი</h1>
+    </div>
+  </header>
+
+  <main class="detail-main">
+    <div class="detail-card">
+      <img id="detail-image" src="" alt="" class="detail-photo">
+      <div class="detail-body">
+        <h2 id="detail-title"></h2>
+        <p id="detail-category" class="meta"></p>
+        <p id="detail-description"></p>
+
+        <h3>ადგილმდებარეობა</h3>
+        <div id="map-wrap" class="map-wrap">
+          <!-- google maps iframe -->
+        </div>
+
+        <h3>3D Viewer</h3>
+        <div class="viewer-wrap">
+          <iframe id="viewer3d" src="" frameborder="0" loading="lazy"></iframe>
+        </div>
+
+        <p><a href="index.html" class="btn">უკან დაბრუნება</a></p>
+      </div>
+    </div>
+  </main>
+
+  <script src="scripts.js"></script>
+  <script>
+    // details page initialization
+    document.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(location.search);
+      const id = params.get('id');
+      if (!id) return;
+      const res = await fetch('data/objects.json');
+      const items = await res.json();
+      const obj = items.find(o => o.id === id);
+      if (!obj) return;
+      document.getElementById('title').textContent = obj.title;
+      document.getElementById('detail-title').textContent = obj.title;
+      document.getElementById('detail-category').textContent = obj.category;
+      document.getElementById('detail-description').textContent = obj.description;
+      document.getElementById('detail-image').src = obj.image;
+      // map iframe
+      const mapWrap = document.getElementById('map-wrap');
+      const map = document.createElement('iframe');
+      map.width = '100%';
+      map.height = '300';
+      map.style.border = '0';
+      map.loading = 'lazy';
+      map.src = `https://maps.google.com/maps?q=${encodeURIComponent(obj.mapLat)},${encodeURIComponent(obj.mapLng)}&z=15&output=embed`;
+      mapWrap.appendChild(map);
+      // 3D viewer base URL configuration
+      const BASE_3D = '';// set base here or replace later with Cloudflare URL
+      const viewer = document.getElementById('viewer3d');
+      // allow raw iframe HTML or a URL string
+      if (obj.viewer3D && typeof obj.viewer3D === 'string') {
+        const v = obj.viewer3D.trim();
+        if (v.startsWith('<iframe')) {
+          // replace the iframe container with the raw HTML
+          const wrap = document.querySelector('.viewer-wrap');
+          wrap.innerHTML = v;
+        } else {
+          const src = v.startsWith('http') ? v : (BASE_3D + v);
+          viewer.src = src;
+        }
+      } else {
+        viewer.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

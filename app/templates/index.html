@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="angi-layout">
+    <aside class="angi-sidebar angi-sidebar-left">
+        <h3>კატეგორიები</h3>
+        <ul class="angi-categories">
+            <li><label><input type="checkbox" class="category-filter" value="eklesia"> კეკლესია</label></li>
+            <li><label><input type="checkbox" class="category-filter" value="cixe"> კციხე</label></li>
+            <li><label><input type="checkbox" class="category-filter" value="muzeumi"> კმუზეუმი</label></li>
+            <li><label><input type="checkbox" class="category-filter" value="dzegli"> კძეგლი</label></li>
+        </ul>
+    </aside>
+    <main class="angi-main">
+        <section class="angi-projects" id="objects-list">
+            <!-- JS pagination will render projects here -->
+        </section>
+    <div id="no-results" style="display:none; text-align:center; padding:2em; color:#7c5c2b; font-weight:bold;"></div>
+        <nav class="angi-pagination" style="text-align:center; margin:2em 0;"></nav>
+    </main>
+    <aside class="angi-sidebar angi-sidebar-right">
+        <h3>ხანა</h3>
+        <ul class="angi-categories">
+            <li><label><input type="checkbox" class="category-filter" value="1-"> ქრისტეშობამდე</label></li>
+            <li><label><input type="checkbox" class="category-filter" value="2-"> I-IXX საუკუნე</label></li>
+            <li><label><input type="checkbox" class="category-filter" value="3-"> XX-საუკუნე</label></li>
+            <li><label><input type="checkbox" class="category-filter" value="4-"> 2000 + წლები</label></li>
+        </ul>
+    </aside>
+</div>
+<script>
+// პროექტების მონაცემები მოძებნება ადგილობრივი API-დან
+let allProjects = [];
+const perPage = 50;
+let currentPage = 1;
+let totalPages = 1;
+
+function loadProjects() {
+    fetch('/api/projects')
+        .then(res => res.json())
+        .then(data => {
+            allProjects = data.projects || [];
+            totalPages = Math.max(1, Math.ceil(allProjects.length / perPage));
+            currentPage = 1;
+            renderProjects(currentPage);
+            renderPagination();
+            applyCategoryFilter();
+        })
+        .catch(err => {
+            console.error('Failed to load projects', err);
+        });
+}
+
+function renderProjects(page) {
+    const start = (page - 1) * perPage;
+    const end = start + perPage;
+    const list = document.getElementById('objects-list');
+    list.innerHTML = '';
+    allProjects.slice(start, end).forEach(project => {
+        const article = document.createElement('article');
+        // support category as array or string
+        const cats = Array.isArray(project.category) ? project.category : [project.category];
+    article.setAttribute('data-categories', cats.join(','));
+    // attach searchable text (title + description) so client search can match
+    const txt = ((project.title || '') + ' ' + (project.description || '')).toLowerCase();
+    article.setAttribute('data-text', txt);
+        // choose image source: prefer project.image; allow relative filenames or full paths
+        const imgSrc = (function(){
+            if (!project.image) return '/static/img/placeholder.jpg';
+            if (typeof project.image !== 'string') return '/static/img/placeholder.jpg';
+            const s = project.image.trim();
+            if (s === '') return '/static/img/placeholder.jpg';
+            if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('/')) return s;
+            // treat as filename stored in static/img
+            return '/static/img/' + s;
+        })();
+        article.innerHTML = `
+            <a href="/object/id/${project.id}">
+                <img src="${imgSrc}" alt="${project.title}" class="thumb">
+                <h2>${project.title}</h2>
+            </a>
+        `;
+        list.appendChild(article);
+    });
+}
+
+function renderPagination() {
+    const pagDiv = document.querySelector('.angi-pagination');
+    pagDiv.innerHTML = '';
+    for (let p = 1; p <= totalPages; p++) {
+        if (p === currentPage) {
+            const span = document.createElement('span');
+            span.textContent = p;
+            pagDiv.appendChild(span);
+        } else {
+            const a = document.createElement('a');
+            a.textContent = p;
+            a.href = '#';
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                currentPage = p;
+                renderProjects(currentPage);
+                renderPagination();
+                applyCategoryFilter();
+            });
+            pagDiv.appendChild(a);
+        }
+    }
+}
+
+// კატეგორიების ფილტრი
+function applyCategoryFilter() {
+    // Collect checked categories separately for left and right sidebars.
+    const leftChecked = Array.from(document.querySelectorAll('.angi-sidebar-left .category-filter:checked')).map(cb => cb.value);
+    const rightChecked = Array.from(document.querySelectorAll('.angi-sidebar-right .category-filter:checked')).map(cb => cb.value);
+    // Read search query from header input (server uses input[name="q"]).
+    const qInput = document.querySelector('input[name="q"]');
+    const q = qInput ? qInput.value.trim().toLowerCase() : '';
+
+    document.querySelectorAll('.angi-projects article').forEach(function(article) {
+        const data = article.getAttribute('data-categories') || '';
+        const cats = data.split(',').map(s => s.trim()).filter(Boolean);
+        // Left sidebar: match if any left category is present (OR within left)
+        const leftOk = leftChecked.length === 0 ? true : cats.some(c => leftChecked.includes(c));
+        // Right sidebar: match if any right category is present (OR within right)
+        const rightOk = rightChecked.length === 0 ? true : cats.some(c => rightChecked.includes(c));
+    // Text search: use data-text (title + description) to avoid DOM-only text issues
+    const text = (article.getAttribute('data-text') || '').toLowerCase();
+    const textOk = q === '' ? true : text.includes(q);
+        // Final visibility: both sides' constraints and text search must hold (AND)
+        const visible = leftOk && rightOk && textOk;
+        article.style.display = visible ? '' : 'none';
+    });
+    // show no-results message if nothing visible
+    const anyVisible = Array.from(document.querySelectorAll('.angi-projects article')).some(a => a.style.display !== 'none');
+    const noEl = document.getElementById('no-results');
+    if (noEl) {
+        if (!anyVisible) {
+            noEl.style.display = '';
+            noEl.textContent = 'რეზულტატი ვერ მოიძებნა';
+        } else {
+            noEl.style.display = 'none';
+            noEl.textContent = '';
+        }
+    }
+}
+document.querySelectorAll('.category-filter').forEach(function(checkbox) {
+    checkbox.addEventListener('change', function() {
+        applyCategoryFilter();
+    });
+});
+
+// prevent the header search form from submitting (we do live-search)
+const headerForm = document.querySelector('form[action="/search"]');
+if (headerForm) {
+    headerForm.addEventListener('submit', function(e){ e.preventDefault(); });
+}
+// live-search from header input
+const headerSearch = document.querySelector('input[name="q"]');
+if (headerSearch) {
+    headerSearch.addEventListener('input', function() {
+        // keep pagination anchored on first page when searching
+        currentPage = 1;
+        renderProjects(currentPage);
+        applyCategoryFilter();
+    });
+}
+
+// ინიციალიზაცია
+window.addEventListener('DOMContentLoaded', function() {
+    loadProjects();
+});
+</script>
+{% endblock %}

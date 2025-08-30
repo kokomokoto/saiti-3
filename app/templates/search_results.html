@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<section>
+    <h1>Search Results</h1>
+    <form method="get" action="/search" onsubmit="return false;">
+        <input type="text" id="live-search" name="q" placeholder="Search..." autocomplete="off">
+    </form>
+    <div id="search-results" class="objects-list">
+        {% for obj in results %}
+        <article>
+            <a href="/object/{{ obj.slug }}">
+                <img src="{{ obj.main_photo_url or url_for('static', filename='img/placeholder.jpg') }}" alt="{{ obj.title }}" class="thumb">
+                <h2>{{ obj.title }}</h2>
+            </a>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

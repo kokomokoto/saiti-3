@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ek-1",
+    "title": "ბაგრატის ეკლესია",
+    "category": ["eklesia", "2-"],
+    "description": "მშვენიერი ძველი ეკლესია ულამაზესი არქიტექტურით.",
+    "image": "static/img/bagrati.PNG",
+    "mapLat": "41.7151",
+    "mapLng": "44.8271",
+    "viewer3D": "https://www.youtube.com/watch?v=jg7zT-02cME&list=RDjg7zT-02cME&start_radio=1"
+  },
+  {
+    "id": "ci-1",
+    "title": "ნუნუს ციხე",
+    "category": "ციხე",
+    "description": "ისტორიული ციხე გამაგრებული კედლებით.",
+    "image": "static/img/1.png",
+    "mapLat": "41.7000",
+    "mapLng": "44.8000",
+    "viewer3D": "https://example.com/3d/cixe"
+  },
+  {
+    "id": "mu-1",
+    "title": "ეროვნული მუზეუმი",
+    "category": "მუზეუმი",
+    "description": "დიდი ნაკრები არქეოლოგიური ექსპონატებით.",
+    "image": "static/img/placeholder.jpg",
+    "mapLat": "41.7200",
+    "mapLng": "44.7900",
+    "viewer3D": "https://example.com/3d/museum"
+  },
+  {
+    "id": "dz-1",
+    "title": "თავისუფლების ძეგლი",
+    "category": "ძეგლი",
+    "description": "საყურადღებო მონუმენტი ადგილობრივი ისტორიისთვის.",
+    "image": "static/img/placeholder.jpg",
+    "mapLat": "41.7300",
+    "mapLng": "44.8000",
+    "viewer3D": "https://example.com/3d/monument"
+  },
+  {
+    "id": "tla-dz-2",
+    "title": "ბაგრატის ეკლესია 2",
+    "category": ["eklesia", "tla dzveli"],
+    "description": "მეორე ობიექტი — ბაგრატის ეკლესია 2.",
+    "image": "static/img/bagrati.PNG",
+    "mapLat": "41.7151",
+    "mapLng": "44.8271",
+    "viewer3D": "https://www.youtube.com/watch?v=jg7zT-02cME&list=RDjg7zT-02cME&start_radio=1"
+  }
+]

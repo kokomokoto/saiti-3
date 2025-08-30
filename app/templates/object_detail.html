@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+<article>
+    {% if project %}
+        <h1>{{ project.title }}</h1>
+        {% set img = project.image if project.image is defined else '' %}
+        {% if img %}
+            {% if img.startswith('http') or img.startswith('/') %}
+                <img src="{{ img }}" alt="{{ project.title }}" class="main-photo">
+            {% else %}
+                <img src="{{ url_for('static', filename='img/' + img) }}" alt="{{ project.title }}" class="main-photo">
+            {% endif %}
+        {% else %}
+            <img src="{{ url_for('static', filename='img/placeholder.jpg') }}" alt="{{ project.title }}" class="main-photo">
+        {% endif %}
+
+        <section>
+            <h2>აღწერა</h2>
+            <p>{{ project.description or 'აღწერა არ არის.' }}</p>
+        </section>
+
+        <section>
+            <h2>Location</h2>
+            {% if project.mapLat and project.mapLng %}
+                <iframe src="https://maps.google.com/maps?q={{ project.mapLat }},{{ project.mapLng }}&z=15&output=embed" width="100%" height="300" style="border:0;"></iframe>
+            {% else %}
+                <p>მდებარეობა მიუთითებული არ არის.</p>
+            {% endif %}
+        </section>
+
+        <section>
+            <h2>3D Viewer</h2>
+            {% if project.viewer3D %}
+                    {# allow either a raw iframe HTML snippet or a URL string #}
+                    {% set v = project.viewer3D|string %}
+                    {% if v.strip().startswith('<iframe') %}
+                        {{ v|safe }}
+                    {% else %}
+                        {% set src = v %}
+                        {# convert YouTube watch links into embed links #}
+                        {% if 'watch?v=' in src %}
+                            {% set src = src.replace('watch?v=', 'embed/') %}
+                        {% endif %}
+                        <iframe src="{{ src }}" class="viewer-iframe" width="100%" height="600" frameborder="0" loading="lazy" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    {% endif %}
+            {% else %}
+                <p>3D შინაარსი არ არის.</p>
+            {% endif %}
+        </section>
+
+        <section>
+            <h2>ფაილები</h2>
+            {% if project.file %}
+                {% if project.file.startswith('http') or project.file.startswith('/') %}
+                    <p><a href="{{ project.file }}" target="_blank" rel="noopener noreferrer">ოჯახი/დოკუმენტი</a></p>
+                {% else %}
+                    <p><a href="{{ url_for('static', filename='files/' + project.file) }}" target="_blank" rel="noopener noreferrer">ოჯახი/დოკუმენტი</a></p>
+                {% endif %}
+            {% else %}
+                <p>ფაილები არ არის.</p>
+            {% endif %}
+        </section>
+    {% else %}
+        <h1>ობიექტი ვერ მოიძებნა</h1>
+        <p>მოთხოვნილი ობიექტი ვერ მოიძებნა მონაცემებში.</p>
+    {% endif %}
+</article>
+{% endblock %}
