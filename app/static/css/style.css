@@ -501,6 +501,37 @@ main {
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     padding: 2em;
 }
+
+/* Responsive fixes: stack layout and un-fix sidebars on small screens */
+@media (max-width: 900px) {
+    .angi-layout { flex-direction: column; gap: 1rem; padding: 0 1rem; }
+    .angi-sidebar, .angi-sidebar-left, .angi-sidebar-right, .sidebar-left, .sidebar-panel {
+        position: static !important;
+        width: 100% !important;
+        max-width: none !important;
+        left: auto !important;
+        right: auto !important;
+        top: auto !important;
+        margin: 0 0 1rem 0;
+    }
+    .angi-main, .main-content, .main-content-center { width: 100% !important; margin: 0 !important; padding: 0.5rem !important; position: static !important; }
+    header { width: 100% !important; margin: 0; padding: 1rem; }
+    footer { position: static !important; width: 100% !important; }
+    .angi-projects { grid-template-columns: repeat(auto-fit, minmax(180px,1fr)) !important; gap: 1rem !important; width: 100%; }
+    .angi-projects article { min-width: 0 !important; padding: 1rem !important; }
+    .objects-list { grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); }
+}
+
+@media (max-width: 560px) {
+    .angi-projects { grid-template-columns: 1fr !important; }
+    .angi-projects img.thumb, .card img, .detail-photo { width: 100% !important; height: auto !important; }
+    input[type="text"][name="q"] { width: 100% !important; }
+    .viewer-wrap iframe, .viewer-iframe { height: 300px !important; max-height: 50vh !important; }
+    .angi-sidebar { padding: 0.8rem !important; }
+}
+
+/* Provide a safer default grid for medium/large screens to avoid overflow */
+.angi-projects { grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); }
 .objects-list {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
