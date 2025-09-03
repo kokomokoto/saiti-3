@@ -313,16 +313,18 @@ footer {
     height: 100%;
     box-sizing: border-box;
 }
-/* 3D viewer iframe sizing */
+/* 3D viewer iframe sizing: responsive + aspect ratio to avoid forced bottom space */
 .viewer-wrap iframe, .viewer-iframe {
-    width: 70%;
-    height: 1200px;
+    width: 80%;
+    height: auto;
     max-height: 80vh;
+    aspect-ratio: 16/9;
     border-radius: 8px;
     border: 1px solid rgba(0,0,0,0.06);
 }
 html, body {
-    padding-bottom: 8em;
+    /* remove forced bottom padding so content can grow naturally */
+    padding-bottom: 0;
     height: 100%;
     min-height: 100vh;
     display: flex;
@@ -421,20 +423,16 @@ header {
     z-index: 100;
 }
 footer {
+    /* make footer visually unobtrusive (no top border/shadow) */
     background: #fffbe6;
-    border-top: 2px solid #e2c48d;
+    border-top: none;
     padding: 1em 0;
     text-align: center;
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    z-index: 200;
+    position: static;
     width: 100%;
     margin: 0;
-    z-index: 100;
+    z-index: 1;
+    box-shadow: none;
 }
 header {
     background: #fffbe6;

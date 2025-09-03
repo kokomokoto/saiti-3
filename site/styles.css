@@ -38,7 +38,9 @@ h1{margin:0;font-size:1.4rem;color:var(--accent-dark)}
 .detail-photo{width:100%;height:360px;object-fit:cover;border-radius:10px}
 .detail-body{padding:12px}
 .map-wrap iframe{border-radius:8px}
-.viewer-wrap iframe, .viewer-iframe{width:100%;height:600px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);max-height:80vh}
+.viewer-wrap iframe, .viewer-iframe{width:100%;height:auto;aspect-ratio:16/9;border-radius:8px;border:1px solid rgba(0,0,0,0.06);max-height:80vh}
+/* make footer visually unobtrusive */
+footer{border-top:none;box-shadow:none}
 
 /* responsive */
 @media(max-width:900px){
