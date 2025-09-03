@@ -61,22 +61,15 @@
       map.loading = 'lazy';
       map.src = `https://maps.google.com/maps?q=${encodeURIComponent(obj.mapLat)},${encodeURIComponent(obj.mapLng)}&z=15&output=embed`;
       mapWrap.appendChild(map);
-      // 3D viewer base URL configuration
-      const BASE_3D = '';// set base here or replace later with Cloudflare URL
-      const viewer = document.getElementById('viewer3d');
-      // allow raw iframe HTML or a URL string
-      if (obj.viewer3D && typeof obj.viewer3D === 'string') {
-        const v = obj.viewer3D.trim();
-        if (v.startsWith('<iframe')) {
-          // replace the iframe container with the raw HTML
-          const wrap = document.querySelector('.viewer-wrap');
-          wrap.innerHTML = v;
-        } else {
-          const src = v.startsWith('http') ? v : (BASE_3D + v);
-          viewer.src = src;
-        }
-      } else {
-        viewer.style.display = 'none';
+      // Optional video embed (YouTube) - show only when obj.video is present
+      if (obj.video && typeof obj.video === 'string') {
+        let v = obj.video.trim();
+        // convert common YouTube formats
+        if (v.includes('watch?v=')) v = v.replace('watch?v=', 'embed/');
+        if (v.includes('youtu.be/')) v = v.replace('youtu.be/', 'www.youtube.com/embed/');
+        const videoWrap = document.createElement('div');
+        videoWrap.innerHTML = `<h3>Video</h3><iframe src="${v}" width="100%" height="360" frameborder="0" loading="lazy" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        document.querySelector('.detail-body').appendChild(videoWrap);
       }
     });
   </script>
