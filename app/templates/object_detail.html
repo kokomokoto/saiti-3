@@ -5,31 +5,23 @@
         <h1>{{ project.title }}</h1>
 
       
+    {# 3D Viewer removed — use the Video section below by setting project.video to a YouTube URL. #}
+
+        {# Optional YouTube/video embed - show only when project.video is provided #}
+        {% if project.video %}
         <section>
-            <h2>3D Viewer</h2>
-            {% if project.viewer3D %}
-                    {# allow either a raw iframe HTML snippet or a URL string #}
-                    {% set v = project.viewer3D|string %}
-                    {# accept iframe HTML anywhere (case-insensitive) #}
-                    {% if '<iframe' in v|lower %}
-                        {{ v|safe }}
-                    {% else %}
-                        {% set src = v %}
-                        {# convert YouTube watch links into embed links #}
-                        {% if 'watch?v=' in src %}
-                            {% set src = src.replace('watch?v=', 'embed/') %}
-                        {% endif %}
-                        {# if the value looks like a local HTML file, embed by src as well #}
-                        {% if src.endswith('.html') or src.endswith('.htm') %}
-                            <iframe src="{{ src }}" class="viewer-iframe" width="100%" height="600" frameborder="0" loading="lazy" allowfullscreen></iframe>
-                        {% else %}
-                            <iframe src="{{ src }}" class="viewer-iframe" width="100%" height="600" frameborder="0" loading="lazy" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                        {% endif %}
-                    {% endif %}
-            {% else %}
-                <p>3D შინაარსი არ არის.</p>
+            <h2>Video</h2>
+            {% set v = project.video|string %}
+            {% set src = v %}
+            {# handle common YouTube formats: watch?v= and youtu.be/ #}
+            {% if 'watch?v=' in src %}
+                {% set src = src.replace('watch?v=', 'embed/') %}
+            {% elif 'youtu.be/' in src %}
+                {% set src = src.replace('youtu.be/', 'www.youtube.com/embed/') %}
             {% endif %}
+            <iframe src="{{ src }}" width="100%" height="360" frameborder="0" loading="lazy" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </section>
+        {% endif %}
 
         <section>
             <h2>აღწერა</h2>
@@ -37,7 +29,7 @@
         </section>
 
         <section>
-            <h2>ადგილმდებარეობა</h2>
+            <h2>Location</h2>
             {% if project.mapLat and project.mapLng %}
                 <iframe src="https://maps.google.com/maps?q={{ project.mapLat }},{{ project.mapLng }}&z=15&output=embed" width="100%" height="300" style="border:0;"></iframe>
             {% else %}

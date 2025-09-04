@@ -1,8 +1,24 @@
-from flask import Flask, render_template, send_from_directory
+from flask import Flask, render_template, send_from_directory, request, redirect, url_for, g
 import os
 import json
 
 app = Flask(__name__, static_folder='app/static', template_folder='app/templates')
+
+
+@app.before_request
+def load_language():
+    # expose selected language to templates via g.lang
+    g.lang = request.cookies.get('lang', 'ka')
+
+
+@app.route('/set_language/<lang>')
+def set_language(lang):
+    # simple language setter: store in a cookie and redirect back
+    if lang not in ('ka', 'en', 'ru'):
+        return redirect(request.referrer or url_for('index'))
+    resp = redirect(request.referrer or url_for('index'))
+    resp.set_cookie('lang', lang, max_age=30*24*3600)
+    return resp
 
 
 @app.route('/')
