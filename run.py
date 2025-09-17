@@ -1,14 +1,108 @@
-from flask import Flask, render_template, send_from_directory, request, redirect, url_for, g
+from flask import Flask, render_template, send_from_directory, request, redirect, url_for, g, jsonify
 import os
 import json
+from datetime import datetime
+try:
+    import geoip2.database
+except Exception:
+    geoip2 = None
+try:
+    from user_agents import parse as ua_parse
+except Exception:
+    ua_parse = None
+
+# optional path to MaxMind DB (set VISITORS_GEOIP_DB env var or leave None)
+GEOIP_DB = os.environ.get('VISITORS_GEOIP_DB')
+_geo_reader = None
+if geoip2 and GEOIP_DB and os.path.exists(GEOIP_DB):
+    try:
+        _geo_reader = geoip2.database.Reader(GEOIP_DB)
+    except Exception:
+        _geo_reader = None
 
 app = Flask(__name__, static_folder='app/static', template_folder='app/templates')
+
+
+@app.context_processor
+def inject_environ():
+    return {'environ': os.environ}
+
+# path to append visitor logs (JSON lines)
+VISITORS_LOG = os.path.join(app.root_path, 'app', 'data', 'visitors.log')
 
 
 @app.before_request
 def load_language():
     # expose selected language to templates via g.lang
     g.lang = request.cookies.get('lang', 'ka')
+
+
+@app.before_request
+def log_visit():
+    # Append a JSON-line with basic visitor info for simple analytics/audit.
+    # Avoid logging static assets and the admin endpoint itself.
+    try:
+        p = request.path or ''
+        if p.startswith('/static') or p.startswith('/admin/visitors'):
+            return
+        ts = datetime.utcnow().isoformat() + 'Z'
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+        ua = request.headers.get('User-Agent', '')
+        referer = request.headers.get('Referer', '')
+        accept = request.headers.get('Accept', '')
+        args = request.args.to_dict(flat=True)
+        entry = {
+            'ts': ts,
+            'ip': ip,
+            'path': p,
+            'method': request.method,
+            'ua': ua,
+            'referer': referer,
+            'accept': accept,
+            'args': args
+        }
+        # enrich with GeoIP (country/city) if available
+        try:
+            if _geo_reader and ip:
+                # if X-Forwarded-For contains comma, take first
+                if ',' in ip:
+                    ip_lookup = ip.split(',')[0].strip()
+                else:
+                    ip_lookup = ip
+                rec = _geo_reader.city(ip_lookup)
+                entry['geo'] = {
+                    'country': getattr(rec.country, 'name', None),
+                    'country_iso': getattr(rec.country, 'iso_code', None),
+                    'city': getattr(rec.city, 'name', None),
+                    'lat': getattr(rec.location, 'latitude', None),
+                    'lon': getattr(rec.location, 'longitude', None)
+                }
+        except Exception:
+            pass
+        # parse user-agent for device/browser if library present
+        try:
+            if ua_parse and ua:
+                ua_obj = ua_parse(ua)
+                entry['device'] = {
+                    'family': ua_obj.device.family,
+                    'brand': ua_obj.device.brand,
+                    'model': ua_obj.device.model,
+                    'is_mobile': ua_obj.is_mobile,
+                    'is_tablet': ua_obj.is_tablet,
+                    'is_pc': ua_obj.is_pc,
+                    'os': ua_obj.os.family,
+                    'browser': ua_obj.browser.family,
+                }
+        except Exception:
+            pass
+        # ensure directory exists
+        os.makedirs(os.path.dirname(VISITORS_LOG), exist_ok=True)
+        with open(VISITORS_LOG, 'a', encoding='utf-8') as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + '\n')
+    except Exception:
+        # do not break the site if logging fails
+        pass
+
 
 
 @app.route('/set_language/<lang>')
@@ -105,6 +199,31 @@ def api_debug_projects():
         'data_path': data_path,
         'file_contents': raw
     }
+
+
+@app.route('/admin/visitors')
+def admin_visitors():
+    """Return recent visitor log entries as JSON. Protected by VISITORS_SECRET env var.
+    Call with: /admin/visitors?secret=THE_SECRET&limit=100
+    """
+    secret = request.args.get('secret') or os.environ.get('VISITORS_SECRET')
+    if not secret or secret != os.environ.get('VISITORS_SECRET'):
+        return jsonify({'error': 'unauthorized'}), 401
+    try:
+        limit = int(request.args.get('limit', '200'))
+    except ValueError:
+        limit = 200
+    entries = []
+    if os.path.exists(VISITORS_LOG):
+        with open(VISITORS_LOG, 'r', encoding='utf-8') as f:
+            # read last N lines efficiently
+            lines = f.readlines()[-limit:]
+        for ln in lines:
+            try:
+                entries.append(json.loads(ln))
+            except Exception:
+                continue
+    return jsonify({'entries': entries})
 
 
 if __name__ == '__main__':
