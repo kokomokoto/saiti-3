@@ -1,5 +1,12 @@
 {% extends 'base.html' %}
 {% block content %}
+{% block head %}
+    {% if project %}
+        <meta name="description" content="{{ project.description|truncate(160) }}">
+        <meta name="keywords" content="{{ project.category|join(', ') }}">
+        <link rel="canonical" href="{{ url_for('object_detail', project_id=project.id, _external=True) }}">
+    {% endif %}
+{% endblock %}
 <article>
     {% if project %}
         <h1>{{ project.title }}</h1>

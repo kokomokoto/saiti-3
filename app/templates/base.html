@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>კეპულია</title>
+    <title>კეპუ</title>
+    <link rel="icon" type="image/x-icon" href="https://pub-4fc6f0228f1b4339a6b16c315c9125e7.r2.dev/photo-html/photo/ye.PNG">
+    {# allow child templates to inject page-specific head tags (meta, canonical) #}
+    {% block head %}{% endblock %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
         {# Matomo tracking (optional) - set MATOMO_URL and MATOMO_SITE_ID env vars on the server #}

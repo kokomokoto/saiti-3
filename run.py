@@ -201,6 +201,32 @@ def api_debug_projects():
     }
 
 
+@app.route('/sitemap.xml')
+def sitemap_xml():
+    # generate a simple sitemap from projects.json
+    data_path = os.path.join(app.root_path, 'app', 'data', 'projects.json')
+    urls = [url_for('index', _external=True)]
+    try:
+        with open(data_path, 'r', encoding='utf-8') as f:
+            projects = json.load(f)
+    except Exception:
+        projects = []
+    for p in projects:
+        pid = p.get('id')
+        if pid:
+            urls.append(url_for('object_detail', project_id=pid, _external=True))
+    sitemap_items = '\n'.join([f"  <url>\n    <loc>{u}</loc>\n  </url>" for u in urls])
+    sitemap = f"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n{sitemap_items}\n</urlset>"
+    return app.response_class(sitemap, mimetype='application/xml')
+
+
+@app.route('/robots.txt')
+def robots_txt():
+    sitemap_url = url_for('sitemap_xml', _external=True)
+    content = f"User-agent: *\nAllow: /\nSitemap: {sitemap_url}\n"
+    return app.response_class(content, mimetype='text/plain')
+
+
 @app.route('/admin/visitors')
 def admin_visitors():
     """Return recent visitor log entries as JSON. Protected by VISITORS_SECRET env var.
